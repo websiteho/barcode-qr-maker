@@ -50,7 +50,7 @@
   const SAVE_IDS = ["bc-value", "bc-format", "qr-type", "fg", "bg", "size-w", "size-h", ...RANGES, ...SELECTS];
   function save() {
     try {
-      const d = { mode: state.mode, qrValues: state.qrValues, textPos: state.textPos, bgNone: $("bg-none").checked };
+      const d = { mode: state.mode, qrValues: state.qrValues, textPos: state.textPos, bgNone: $("bg-none").checked, fit: $("fit").checked };
       SAVE_IDS.forEach((id) => (d[id] = $(id).value));
       localStorage.setItem(STORE, JSON.stringify(d));
     } catch (_) {}
@@ -273,7 +273,7 @@
 
     const canvas = $("qr-canvas");
     canvas.width = canvas.height = size;
-    canvas.style.width = Math.min(viewPx, 360) + "px";
+    canvas.style.width = viewPx + "px";
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, size, size);
     if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, size, size); }
@@ -384,6 +384,10 @@
     })
   );
 
+  // 화면에 맞추기: 큰 바코드를 상자 폭에 맞춰 줄여서 보기 (저장 크기는 그대로)
+  const applyFit = () => $("preview").classList.toggle("fit", $("fit").checked);
+  $("fit").addEventListener("change", () => { applyFit(); save(); });
+
   $("reset-color").addEventListener("click", () => {
     $("fg").value = "#000000"; $("bg").value = "#ffffff"; $("bg-none").checked = false; render();
   });
@@ -401,12 +405,22 @@
   });
   if (saved.qrValues) state.qrValues = saved.qrValues;
   $("bg-none").checked = !!saved.bgNone;
+  $("fit").checked = !!saved.fit;
+  applyFit();
   setTextPos(["top", "bottom", "left", "right", "none"].includes(saved.textPos) ? saved.textPos : "bottom");
 
   RANGES.forEach(showRange);
   const presetOf = Object.keys(PRESETS).find((k) => Object.entries(PRESETS[k]).every(([id, v]) => +$(id).value === v));
   document.querySelectorAll("#size-seg button").forEach((b) => b.classList.toggle("active", b.dataset.size === presetOf));
 
+  // 검색어별 페이지의 기본값 (예: /ean13/ 페이지는 EAN13 선택)
+  const pre = document.body.dataset;
+  if (pre.presetFormat && FORMATS.includes(pre.presetFormat)) $("bc-format").value = pre.presetFormat;
+  if (pre.presetQr && QR_TYPES[pre.presetQr]) $("qr-type").value = pre.presetQr;
+  if (pre.presetPos) setTextPos(pre.presetPos);
+  // 이전에 입력한 값이 이 페이지의 바코드 종류에 맞지 않으면 비워 둠
+  if (pre.presetFormat && window.JsBarcode && $("bc-value").value && !buildBarcode(2, 100)) $("bc-value").value = "";
+
   renderQrFields();
-  setMode(saved.mode === "qr" ? "qr" : "barcode");
+  setMode(pre.presetMode || (saved.mode === "qr" ? "qr" : "barcode"));
 })();

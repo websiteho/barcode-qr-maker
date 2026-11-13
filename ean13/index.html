@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EAN-13 바코드 생성기 - 상품 바코드 만들기 (880 국가코드)</title>
+  <meta name="description" content="EAN-13 상품 바코드를 무료로 만드세요. 숫자 12자리만 넣으면 체크 숫자 자동 계산. 880으로 시작하는 국내 상품 바코드 이미지 PNG·SVG 저장과 인쇄." />
+  <meta name="keywords" content="EAN13 바코드, EAN-13 생성, 상품 바코드 만들기, 상품 바코드 생성, 880 바코드, 바코드 체크숫자, 제품 바코드, 유통 바코드" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://websiteho.github.io/barcode-qr-maker/ean13/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:site_name" content="websiteho 바코드 생성기" />
+  <meta property="og:url" content="https://websiteho.github.io/barcode-qr-maker/ean13/" />
+  <meta property="og:title" content="EAN-13 바코드 생성기 - 상품 바코드 만들기 (880 국가코드)" />
+  <meta property="og:description" content="EAN-13 상품 바코드를 무료로 만드세요. 숫자 12자리만 넣으면 체크 숫자 자동 계산. 880으로 시작하는 국내 상품 바코드 이미지 PNG·SVG 저장과 인쇄." />
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "EAN-13 상품 바코드 만들기",
+  "url": "https://websiteho.github.io/barcode-qr-maker/ean13/",
+  "description": "EAN-13 상품 바코드를 무료로 만드세요. 숫자 12자리만 넣으면 체크 숫자 자동 계산. 880으로 시작하는 국내 상품 바코드 이미지 PNG·SVG 저장과 인쇄.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "ko",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KRW"
+  }
+}
+  </script>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body data-preset-mode="barcode" data-preset-format="EAN13" data-preset-qr="" data-preset-pos="">
+  <main class="wrap">
+    <h1 class="title">EAN-13 상품 바코드 만들기</h1>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-mode="barcode" role="tab">바코드</button>
+      <button class="tab" data-mode="qr" role="tab">QR</button>
+    </nav>
+
+    <!-- ① 데이터 입력 + 종류 -->
+    <section class="card">
+      <div class="line" id="barcode-input">
+        <input id="bc-value" type="text" placeholder="바코드 데이터 입력" autocomplete="off" spellcheck="false" />
+        <select id="bc-format" aria-label="바코드 종류"></select>
+      </div>
+      <div class="line" id="qr-input" hidden>
+        <div class="qr-fields" id="qr-fields"></div>
+        <select id="qr-type" aria-label="QR 종류">
+          <option value="text">TEXT/URL</option>
+          <option value="wifi">WIFI</option>
+          <option value="tel">TEL</option>
+          <option value="sms">SMS</option>
+          <option value="email">EMAIL</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- ② 바코드 / QR 미리보기 + 저장 -->
+    <section class="card">
+      <div class="preview" id="preview">
+        <div id="bc-holder"></div>
+        <canvas id="qr-canvas" hidden></canvas>
+      </div>
+      <div class="meta">
+        <span class="error" id="error"></span>
+        <span class="dim" id="dim"></span>
+        <label class="fit-toggle"><input type="checkbox" id="fit" /> 화면에 맞추기</label>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="dl-png">PNG 저장</button>
+        <button class="btn" id="dl-svg">SVG 저장</button>
+        <button class="btn" id="copy">이미지 복사</button>
+        <button class="btn" id="print">인쇄</button>
+      </div>
+    </section>
+
+    <!-- ③ 상세 설정 -->
+    <section class="card">
+      <div class="sec-title">설정</div>
+
+      <div class="row size-row">
+        <div class="field">
+          <span>크기</span>
+          <div class="seg" id="size-seg">
+            <button data-size="s">작게</button>
+            <button data-size="m" class="active">보통</button>
+            <button data-size="l">크게</button>
+          </div>
+        </div>
+        <div class="field">
+          <span>직접 입력</span>
+          <div class="mm" id="mm-box">
+            <input type="number" id="size-w" min="1" max="1000" step="0.5" placeholder="가로" />
+            <i>×</i>
+            <input type="number" id="size-h" min="1" max="1000" step="0.5" placeholder="세로" />
+            <em>mm</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field bc-only">
+          <span>글자 위치</span>
+          <div class="pad" id="text-pad">
+            <button data-pos="top" title="위" style="grid-area:t">▲</button>
+            <button data-pos="left" title="왼쪽" style="grid-area:l">◀</button>
+            <button data-pos="none" title="글자 숨김" style="grid-area:c">✕</button>
+            <button data-pos="right" title="오른쪽" style="grid-area:r">▶</button>
+            <button data-pos="bottom" title="아래" style="grid-area:b">▼</button>
+          </div>
+        </div>
+        <label class="field color"><span>코드 색</span><input type="color" id="fg" value="#000000" /></label>
+        <div class="field color">
+          <span>배경 색</span>
+          <input type="color" id="bg" value="#ffffff" />
+        </div>
+        <label class="check"><input type="checkbox" id="bg-none" /> 배경 없음</label>
+        <button class="link" id="reset-color" type="button">기본색으로</button>
+      </div>
+
+      <details class="adv" open>
+        <summary>상세 설정</summary>
+
+        <div class="grid2 bc">
+          <label class="field"><span>너비 (막대 두께): <b id="bc-width-v">2</b></span>
+            <input type="range" id="bc-width" min="1" max="6" value="2" /></label>
+          <label class="field"><span>높이: <b id="bc-height-v">100</b></span>
+            <input type="range" id="bc-height" min="20" max="300" step="5" value="100" /></label>
+          <label class="field"><span>여백: <b id="bc-margin-v">10</b></span>
+            <input type="range" id="bc-margin" min="0" max="50" value="10" /></label>
+          <label class="field"><span>글자 크기: <b id="bc-font-size-v">20</b></span>
+            <input type="range" id="bc-font-size" min="8" max="60" value="20" /></label>
+          <label class="field"><span>글자 정렬 (위·아래일 때)</span>
+            <select id="bc-text-align"><option value="center">가운데</option><option value="left">왼쪽</option><option value="right">오른쪽</option></select></label>
+          <label class="field"><span>글꼴</span>
+            <select id="bc-font">
+              <option value="monospace">Monospace</option>
+              <option value="sans-serif">Sans-serif</option>
+              <option value="serif">Serif</option>
+              <option value="fantasy">Fantasy</option>
+              <option value="cursive">Cursive</option>
+            </select></label>
+          <label class="field"><span>글꼴 스타일</span>
+            <select id="bc-font-opt">
+              <option value="">보통</option>
+              <option value="bold">굵게</option>
+              <option value="italic">기울임</option>
+              <option value="bold italic">굵게 + 기울임</option>
+            </select></label>
+          <label class="field"><span>글자 간격: <b id="bc-text-margin-v">2</b></span>
+            <input type="range" id="bc-text-margin" min="0" max="30" value="2" /></label>
+        </div>
+
+        <div class="grid2 qr" hidden>
+          <label class="field"><span>크기 (px): <b id="qr-size-v">240</b></span>
+            <input type="range" id="qr-size" min="100" max="1000" step="10" value="240" /></label>
+          <label class="field"><span>여백 칸 수: <b id="qr-margin-v">2</b></span>
+            <input type="range" id="qr-margin" min="0" max="10" value="2" /></label>
+          <label class="field"><span>오류 복원 수준</span>
+            <select id="qr-ecl">
+              <option value="L">낮음 (7%)</option>
+              <option value="M" selected>보통 (15%)</option>
+              <option value="Q">높음 (25%)</option>
+              <option value="H">최고 (30%)</option>
+            </select></label>
+        </div>
+      </details>
+    </section>
+    <!-- 검색엔진용 안내 (도구 아래에 작게 표시) -->
+    <section class="about">
+      <h2>EAN-13 바코드란?</h2>
+      <p>EAN-13은 마트·편의점·온라인몰에서 판매되는 상품에 붙는 13자리 숫자 바코드입니다.
+        한국에서 발급된 상품 바코드는 국가코드 <b>880</b>으로 시작합니다.</p>
+      <h3>만드는 방법</h3>
+      <ul>
+        <li>종류가 EAN13으로 선택된 상태에서 숫자 12자리 또는 13자리를 입력하세요.</li>
+        <li>12자리만 넣으면 13번째 체크 숫자는 자동으로 계산되어 붙습니다.</li>
+        <li>표준 크기는 약 37.3 × 25.9 mm이며, 80%~200% 범위로 줄이거나 키워 쓸 수 있습니다.</li>
+      </ul>
+      <details>
+        <summary>상품 바코드 번호는 어디서 받나요?</summary>
+        <p>실제 판매용 상품 바코드 번호는 GS1 Korea(대한상공회의소 유통물류진흥원)에 회원 가입 후 발급받아야 합니다.
+          임의로 만든 번호는 다른 상품과 겹칠 수 있어 유통 매장에서 사용할 수 없습니다. 발급받은 번호를 이 도구에 넣으면 바코드 이미지를 만들 수 있습니다.</p>
+      </details>
+      <details>
+        <summary>EAN-13과 UPC는 무엇이 다른가요?</summary>
+        <p>UPC-A는 미국·캐나다에서 쓰는 12자리 바코드이고, EAN-13은 그 밖의 대부분 국가에서 쓰는 13자리 바코드입니다.</p>
+      </details>
+      <nav class="related" aria-label="다른 도구">
+        <h3>다른 도구</h3>
+        <ul>
+          <li><a href="../">바코드 생성기</a></li>
+          <li><a href="../barcode-print/">바코드 출력 · 인쇄</a></li>
+          <li><a href="../ean13/" aria-current="page">EAN-13 상품 바코드</a></li>
+          <li><a href="../code128/">CODE128 바코드</a></li>
+          <li><a href="../code39/">CODE39 바코드</a></li>
+          <li><a href="../itf14/">ITF-14 박스 바코드</a></li>
+          <li><a href="../upc/">UPC 바코드</a></li>
+          <li><a href="../barcode-image/">바코드 이미지 저장</a></li>
+          <li><a href="../qr-code/">QR코드 생성기</a></li>
+          <li><a href="../wifi-qr/">와이파이 QR코드</a></li>
+        </ul>
+      </nav>
+    </section>
+  </main>
+
+  <footer class="foot">
+    바코드: <a href="https://github.com/lindell/JsBarcode" target="_blank" rel="noopener">JsBarcode</a> (MIT) ·
+    QR: <a href="https://github.com/kazuhiko/qrcode-generator" target="_blank" rel="noopener">qrcode-generator</a> (MIT) ·
+    <a href="../CREDITS.md" target="_blank" rel="noopener">라이선스 전문</a><br />
+    "QR Code"는 (주)덴소웨이브(DENSO WAVE INCORPORATED)의 등록상표입니다.
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="../app.js"></script>
+</body>
+</html>

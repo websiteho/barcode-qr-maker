@@ -22,7 +22,7 @@ body {
 button, input, select { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
 
-.wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 40px; display: grid; gap: 12px; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 40px; display: grid; gap: 12px; }
 .title { margin: 0 0 4px; font-size: 22px; text-align: center; letter-spacing: -0.3px; }
 
 /* 탭 */
@@ -50,16 +50,22 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 
 /* 미리보기 */
 .preview {
-  min-height: 180px; display: grid; place-items: center; overflow: auto;
+  min-height: 200px; display: flex; overflow: auto;
   background: repeating-conic-gradient(#f3f4f8 0% 25%, #fff 0% 50%) 50% / 16px 16px;
   border-radius: 10px; padding: 16px;
 }
+/* margin:auto 로 가운데 정렬 → 바코드가 상자보다 커져도 왼쪽이 잘리지 않고 스크롤됨 */
+#bc-holder, .preview canvas { margin: auto; flex: none; }
 #bc-holder:empty { display: none; }
-#bc-holder svg, .preview canvas { display: block; max-width: 100%; height: auto; }
+#bc-holder svg, .preview canvas { display: block; height: auto; }
+.preview.fit #bc-holder { max-width: 100%; flex: 0 1 auto; }
+.preview.fit #bc-holder svg, .preview.fit canvas { max-width: 100%; }
 
 .meta { display: flex; justify-content: space-between; gap: 8px; min-height: 20px; margin-top: 8px; font-size: 13px; }
 .error { color: var(--danger); }
 .dim { color: var(--muted); margin-left: auto; }
+.fit-toggle { display: flex; align-items: center; gap: 4px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.fit-toggle input { accent-color: var(--brand); margin: 0; }
 
 .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
 .btn { height: 42px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-weight: 600; }
@@ -125,6 +131,15 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 .about ul { margin: 0; padding-left: 18px; }
 .about details { margin-top: 8px; }
 .about summary { cursor: pointer; color: var(--ink); }
+
+.related { margin-top: 16px; }
+.related ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.related a {
+  display: inline-block; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px;
+  background: #fff; color: var(--ink); text-decoration: none; font-size: 12.5px;
+}
+.related a:hover { border-color: var(--brand); color: var(--brand); }
+.related a[aria-current="page"] { background: var(--brand); border-color: var(--brand); color: #fff; }
 
 .foot { text-align: center; color: var(--muted); font-size: 12px; line-height: 1.7; padding: 0 16px 32px; }
 .foot a { color: var(--muted); }
