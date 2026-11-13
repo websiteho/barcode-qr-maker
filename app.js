@@ -418,6 +418,7 @@
   if (pre.presetFormat && FORMATS.includes(pre.presetFormat)) $("bc-format").value = pre.presetFormat;
   if (pre.presetQr && QR_TYPES[pre.presetQr]) $("qr-type").value = pre.presetQr;
   if (pre.presetPos) setTextPos(pre.presetPos);
+  if (pre.presetBgnone === "1") $("bg-none").checked = true;
   // 이전에 입력한 값이 이 페이지의 바코드 종류에 맞지 않으면 비워 둠
   if (pre.presetFormat && window.JsBarcode && $("bc-value").value && !buildBarcode(2, 100)) $("bc-value").value = "";
 

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>무료 QR 인쇄 - QR코드 출력, mm 크기 지정 QR코드 프린트</title>
+  <meta name="description" content="QR코드를 원하는 mm 크기로 만들어 무료로 바로 인쇄하세요. 명함·전단지·포스터·테이블 안내용 QR코드 출력, 300dpi PNG·SVG 저장, 회원가입 없음." />
+  <meta name="keywords" content="무료 QR 인쇄, 무료 QR코드 인쇄, QR코드 출력, QR코드 인쇄, QR 인쇄, QR코드 프린트, QR코드 크기, 명함 QR코드, 전단지 QR코드" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://websiteho.github.io/barcode-qr-maker/qr-print/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:site_name" content="websiteho 바코드 생성기" />
+  <meta property="og:url" content="https://websiteho.github.io/barcode-qr-maker/qr-print/" />
+  <meta property="og:title" content="무료 QR 인쇄 - QR코드 출력, mm 크기 지정 QR코드 프린트" />
+  <meta property="og:description" content="QR코드를 원하는 mm 크기로 만들어 무료로 바로 인쇄하세요. 명함·전단지·포스터·테이블 안내용 QR코드 출력, 300dpi PNG·SVG 저장, 회원가입 없음." />
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "무료 QR코드 인쇄 · QR코드 출력",
+  "url": "https://websiteho.github.io/barcode-qr-maker/qr-print/",
+  "description": "QR코드를 원하는 mm 크기로 만들어 무료로 바로 인쇄하세요. 명함·전단지·포스터·테이블 안내용 QR코드 출력, 300dpi PNG·SVG 저장, 회원가입 없음.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "ko",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KRW"
+  }
+}
+  </script>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body data-preset-mode="qr" data-preset-format="" data-preset-qr="text" data-preset-pos="" data-preset-bgnone="">
+  <main class="wrap">
+    <h1 class="title">무료 QR코드 인쇄 · QR코드 출력</h1>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-mode="barcode" role="tab">바코드</button>
+      <button class="tab" data-mode="qr" role="tab">QR</button>
+    </nav>
+
+    <!-- ① 데이터 입력 + 종류 -->
+    <section class="card">
+      <div class="line" id="barcode-input">
+        <input id="bc-value" type="text" placeholder="바코드 데이터 입력" autocomplete="off" spellcheck="false" />
+        <select id="bc-format" aria-label="바코드 종류"></select>
+      </div>
+      <div class="line" id="qr-input" hidden>
+        <div class="qr-fields" id="qr-fields"></div>
+        <select id="qr-type" aria-label="QR 종류">
+          <option value="text">TEXT/URL</option>
+          <option value="wifi">WIFI</option>
+          <option value="tel">TEL</option>
+          <option value="sms">SMS</option>
+          <option value="email">EMAIL</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- ② 바코드 / QR 미리보기 + 저장 -->
+    <section class="card">
+      <div class="preview" id="preview">
+        <div id="bc-holder"></div>
+        <canvas id="qr-canvas" hidden></canvas>
+      </div>
+      <div class="meta">
+        <span class="error" id="error"></span>
+        <span class="dim" id="dim"></span>
+        <label class="fit-toggle"><input type="checkbox" id="fit" /> 화면에 맞추기</label>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="dl-png">PNG 저장</button>
+        <button class="btn" id="dl-svg">SVG 저장</button>
+        <button class="btn" id="copy">이미지 복사</button>
+        <button class="btn" id="print">인쇄</button>
+      </div>
+    </section>
+
+    <!-- ③ 상세 설정 -->
+    <section class="card">
+      <div class="sec-title">설정</div>
+
+      <div class="row size-row">
+        <div class="field">
+          <span>크기</span>
+          <div class="seg" id="size-seg">
+            <button data-size="s">작게</button>
+            <button data-size="m" class="active">보통</button>
+            <button data-size="l">크게</button>
+          </div>
+        </div>
+        <div class="field">
+          <span>직접 입력</span>
+          <div class="mm" id="mm-box">
+            <input type="number" id="size-w" min="1" max="1000" step="0.5" placeholder="가로" />
+            <i>×</i>
+            <input type="number" id="size-h" min="1" max="1000" step="0.5" placeholder="세로" />
+            <em>mm</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field bc-only">
+          <span>글자 위치</span>
+          <div class="pad" id="text-pad">
+            <button data-pos="top" title="위" style="grid-area:t">▲</button>
+            <button data-pos="left" title="왼쪽" style="grid-area:l">◀</button>
+            <button data-pos="none" title="글자 숨김" style="grid-area:c">✕</button>
+            <button data-pos="right" title="오른쪽" style="grid-area:r">▶</button>
+            <button data-pos="bottom" title="아래" style="grid-area:b">▼</button>
+          </div>
+        </div>
+        <label class="field color"><span>코드 색</span><input type="color" id="fg" value="#000000" /></label>
+        <div class="field color">
+          <span>배경 색</span>
+          <input type="color" id="bg" value="#ffffff" />
+        </div>
+        <label class="check"><input type="checkbox" id="bg-none" /> 배경 없음</label>
+        <button class="link" id="reset-color" type="button">기본색으로</button>
+      </div>
+
+      <details class="adv" open>
+        <summary>상세 설정</summary>
+
+        <div class="grid2 bc">
+          <label class="field"><span>너비 (막대 두께): <b id="bc-width-v">2</b></span>
+            <input type="range" id="bc-width" min="1" max="6" value="2" /></label>
+          <label class="field"><span>높이: <b id="bc-height-v">100</b></span>
+            <input type="range" id="bc-height" min="20" max="300" step="5" value="100" /></label>
+          <label class="field"><span>여백: <b id="bc-margin-v">10</b></span>
+            <input type="range" id="bc-margin" min="0" max="50" value="10" /></label>
+          <label class="field"><span>글자 크기: <b id="bc-font-size-v">20</b></span>
+            <input type="range" id="bc-font-size" min="8" max="60" value="20" /></label>
+          <label class="field"><span>글자 정렬 (위·아래일 때)</span>
+            <select id="bc-text-align"><option value="center">가운데</option><option value="left">왼쪽</option><option value="right">오른쪽</option></select></label>
+          <label class="field"><span>글꼴</span>
+            <select id="bc-font">
+              <option value="monospace">Monospace</option>
+              <option value="sans-serif">Sans-serif</option>
+              <option value="serif">Serif</option>
+              <option value="fantasy">Fantasy</option>
+              <option value="cursive">Cursive</option>
+            </select></label>
+          <label class="field"><span>글꼴 스타일</span>
+            <select id="bc-font-opt">
+              <option value="">보통</option>
+              <option value="bold">굵게</option>
+              <option value="italic">기울임</option>
+              <option value="bold italic">굵게 + 기울임</option>
+            </select></label>
+          <label class="field"><span>글자 간격: <b id="bc-text-margin-v">2</b></span>
+            <input type="range" id="bc-text-margin" min="0" max="30" value="2" /></label>
+        </div>
+
+        <div class="grid2 qr" hidden>
+          <label class="field"><span>크기 (px): <b id="qr-size-v">240</b></span>
+            <input type="range" id="qr-size" min="100" max="1000" step="10" value="240" /></label>
+          <label class="field"><span>여백 칸 수: <b id="qr-margin-v">2</b></span>
+            <input type="range" id="qr-margin" min="0" max="10" value="2" /></label>
+          <label class="field"><span>오류 복원 수준</span>
+            <select id="qr-ecl">
+              <option value="L">낮음 (7%)</option>
+              <option value="M" selected>보통 (15%)</option>
+              <option value="Q">높음 (25%)</option>
+              <option value="H">최고 (30%)</option>
+            </select></label>
+        </div>
+      </details>
+    </section>
+    <!-- 검색엔진용 안내 (도구 아래에 작게 표시) -->
+    <section class="about">
+      <h2>QR코드를 원하는 크기로 인쇄하기</h2>
+      <p>설정의 <b>직접 입력</b> 칸에 가로 크기를 mm로 넣으면 그 크기의 QR코드가 만들어집니다.
+        <b>인쇄</b> 버튼으로 바로 출력하거나, 300dpi PNG·SVG로 저장해 명함·전단지·포스터 디자인에 넣을 수 있습니다. 모두 무료입니다.</p>
+      <h3>용도별 권장 크기</h3>
+      <ul>
+        <li><b>명함</b>: 가로 15~20mm 이상</li>
+        <li><b>전단지·메뉴판·테이블 안내</b>: 25~40mm</li>
+        <li><b>벽 포스터·현수막</b>: 찍는 거리(cm)의 1/10 이상 (예: 1m 거리 → 10cm)</li>
+      </ul>
+      <h3>인쇄 품질 팁</h3>
+      <ul>
+        <li>QR코드 둘레의 여백(흰 테두리)을 지우지 마세요. 여백이 없으면 인식이 잘 안 됩니다.</li>
+        <li>내용이 길수록 칸이 촘촘해지므로 크기를 키우세요. 칸이 너무 작으면 화면에 경고가 표시됩니다.</li>
+        <li>로고를 덮거나 일부가 가려질 수 있는 곳에는 '오류 복원 수준'을 높음 이상으로 올리세요.</li>
+      </ul>
+      <nav class="related" aria-label="다른 도구">
+        <h3>다른 도구</h3>
+        <ul>
+          <li><a href="../">바코드 생성기</a></li>
+          <li><a href="../barcode-print/">바코드 출력 · 인쇄</a></li>
+          <li><a href="../ean13/">EAN-13 상품 바코드</a></li>
+          <li><a href="../code128/">CODE128 바코드</a></li>
+          <li><a href="../code39/">CODE39 바코드</a></li>
+          <li><a href="../itf14/">ITF-14 박스 바코드</a></li>
+          <li><a href="../upc/">UPC 바코드</a></li>
+          <li><a href="../barcode-image/">바코드 이미지 저장</a></li>
+          <li><a href="../transparent-barcode/">투명 바코드</a></li>
+          <li><a href="../qr-code/">QR코드 생성기</a></li>
+          <li><a href="../qr-print/" aria-current="page">QR코드 인쇄</a></li>
+          <li><a href="../wifi-qr/">와이파이 QR코드</a></li>
+        </ul>
+      </nav>
+    </section>
+  </main>
+
+  <footer class="foot">
+    바코드: <a href="https://github.com/lindell/JsBarcode" target="_blank" rel="noopener">JsBarcode</a> (MIT) ·
+    QR: <a href="https://github.com/kazuhiko/qrcode-generator" target="_blank" rel="noopener">qrcode-generator</a> (MIT) ·
+    <a href="../CREDITS.md" target="_blank" rel="noopener">라이선스 전문</a><br />
+    "QR Code"는 (주)덴소웨이브(DENSO WAVE INCORPORATED)의 등록상표입니다.
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="../app.js"></script>
+</body>
+</html>
