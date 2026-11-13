@@ -43,17 +43,21 @@
   let current = { kind: null };
 
   // ---------- 저장/복원 ----------
-  const STORE = "barcode-qr-maker:v4";
+  // 입력값은 "이 탭"에서만 유지 (sessionStorage): 새로고침·페이지 이동은 유지, 새 탭·새 브라우저는 빈 화면
+  const STORE = "barcode-qr-maker:v5";
+  try { // 예전 버전이 브라우저에 영구 저장해 둔 값 정리
+    ["v1", "v2", "v3", "v4"].forEach((v) => localStorage.removeItem("barcode-qr-maker:" + v));
+  } catch (_) {}
   const SAVE_IDS = ["bc-value", "bc-format", "qr-type", "fg", "bg", ...RANGES, ...SELECTS];
   function save() {
     try {
       const d = { mode: state.mode, qrValues: state.qrValues, textPos: state.textPos, bgNone: $("bg-none").checked, extra: state.extra };
       SAVE_IDS.forEach((id) => (d[id] = $(id).value));
-      localStorage.setItem(STORE, JSON.stringify(d));
+      sessionStorage.setItem(STORE, JSON.stringify(d));
     } catch (_) {}
   }
   function load() {
-    try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch (_) { return {}; }
+    try { return JSON.parse(sessionStorage.getItem(STORE)) || {}; } catch (_) { return {}; }
   }
 
   // ---------- 공통 도우미 ----------
