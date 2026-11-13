@@ -5,9 +5,6 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const SVG_NS = "http://www.w3.org/2000/svg";
-  const PX_PER_MM = 96 / 25.4; // 화면 기준 (CSS px)
-  const EXPORT_DPI = 300;      // mm 입력 시 PNG 해상도
-  const MIN_MODULE_MM = 0.19;  // 이보다 가는 막대는 스캔이 어려움
 
   const FORMATS = ["CODE128", "EAN13", "EAN8", "UPC", "CODE39", "ITF14", "ITF", "codabar",
     "CODE128A", "CODE128B", "CODE128C", "MSI", "MSI10", "MSI11", "MSI1010", "MSI1110", "pharmacode"];
@@ -47,7 +44,7 @@
 
   // ---------- 저장/복원 ----------
   const STORE = "barcode-qr-maker:v4";
-  const SAVE_IDS = ["bc-value", "bc-format", "qr-type", "fg", "bg", "size-w", "size-h", ...RANGES, ...SELECTS];
+  const SAVE_IDS = ["bc-value", "bc-format", "qr-type", "fg", "bg", ...RANGES, ...SELECTS];
   function save() {
     try {
       const d = { mode: state.mode, qrValues: state.qrValues, textPos: state.textPos, bgNone: $("bg-none").checked, fit: $("fit").checked, extra: state.extra };
@@ -65,13 +62,6 @@
   const escXml = (s) => s.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c]));
   const bgColor = () => ($("bg-none").checked ? null : $("bg").value);
 
-  // mm 입력이 있으면 { w, h } (mm), 없으면 null
-  function mmSize() {
-    const w = parseFloat($("size-w").value), h = parseFloat($("size-h").value);
-    if (state.mode === "qr") return w > 0 ? { w, h: w } : null;
-    return w > 0 && h > 0 ? { w, h } : null;
-  }
-
   // ---------- UI ----------
   function setMode(mode) {
     state.mode = mode;
@@ -84,7 +74,6 @@
     document.querySelector(".grid2.bc").hidden = isQr;
     document.querySelector(".grid2.qr").hidden = !isQr;
     document.querySelectorAll(".bc-only").forEach((e) => (e.hidden = isQr));
-    $("size-h").disabled = isQr; // QR은 정사각형
     render();
   }
 
@@ -110,18 +99,6 @@
     $("bc-text-align").closest(".field").hidden = !(pos === "top" || pos === "bottom");
   }
 
-  // mm 입력 중이면 크기 버튼/너비·높이 슬라이더를 잠금 표시
-  function syncSizeUi() {
-    const mm = mmSize();
-    $("mm-box").classList.toggle("on", !!mm);
-    $("size-seg").classList.toggle("off", !!mm);
-    ["bc-width", "bc-height", "qr-size"].forEach((id) => {
-      $(id).disabled = !!mm;
-      $(id).closest(".field").classList.toggle("locked", !!mm);
-    });
-    if (state.mode === "qr" && $("size-w").value) $("size-h").value = $("size-w").value;
-  }
-
   function setReady(ok) { ["dl-png", "dl-svg", "copy", "print"].forEach((id) => ($(id).disabled = !ok)); }
   function showMsg(msg, warn) { $("error").textContent = msg || ""; $("error").className = warn ? "warn" : "error"; }
   function clearPreview() {
@@ -132,9 +109,20 @@
     current = { kind: null };
   }
 
+  // 화면에 맞추기: 미리보기 상자보다 크면 상자 폭에 맞춰 줄여서 보여줌 (저장 크기는 그대로)
+  function applyFit() {
+    if (!current.kind) return;
+    const el = current.kind === "qr" ? $("qr-canvas") : $("bc-holder").firstElementChild;
+    if (!el) return;
+    const box = $("preview");
+    const cs = getComputedStyle(box);
+    const avail = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const w = $("fit").checked ? Math.min(current.viewW, avail) : current.viewW;
+    el.style.width = Math.max(1, Math.floor(w)) + "px";
+  }
+
   function render() {
     save();
-    syncSizeUi();
     $("bg").disabled = $("bg-none").checked;
     showMsg("");
     if (state.mode === "qr") renderQr();
@@ -210,23 +198,9 @@
     return { body, w: W, h };
   }
 
-  // 원하는 전체 크기(px)에 맞도록 막대 두께·높이를 계산 (크기는 두께·높이에 비례하므로 두 번 재서 역산)
-  function fitBarcode(targetW, targetH, item) {
-    const a = buildBarcode(1, 10, item), b = buildBarcode(2, 10, item), c = buildBarcode(1, 20, item);
-    if (!a || !b || !c) return null;
-    const kw = b.w - a.w, kh = (c.h - a.h) / 10;
-    const bw = (targetW - (a.w - kw)) / kw;
-    const bh = (targetH - (a.h - 10 * kh)) / kh;
-    if (!(bw > 0.05) || !(bh > 1)) return { tooSmall: true };
-    const r = buildBarcode(bw, bh, item);
-    r.moduleMm = bw / PX_PER_MM;
-    return r;
-  }
-
-  function wrapSvg(body, w, h, mm) {
+  function wrapSvg(body, w, h) {
     const bg = bgColor();
-    const size = mm ? `width="${mm.w}mm" height="${mm.h}mm"` : `width="${r2(w)}" height="${r2(h)}"`;
-    return `<svg xmlns="${SVG_NS}" ${size} viewBox="0 0 ${r2(w)} ${r2(h)}">` +
+    return `<svg xmlns="${SVG_NS}" width="${r2(w)}" height="${r2(h)}" viewBox="0 0 ${r2(w)} ${r2(h)}">` +
       (bg ? `<rect width="100%" height="100%" fill="${bg}"/>` : "") + body + `</svg>`;
   }
 
@@ -236,30 +210,17 @@
     if (!list.length) return clearPreview();
     if (!window.JsBarcode) { clearPreview(); return showMsg("라이브러리를 불러오지 못했어요. 인터넷 연결을 확인하세요."); }
 
-    const mm = mmSize();
     const parts = [], bad = [];
-    let tooSmall = false, minModule = Infinity;
     for (const it of list) {
-      let r;
-      if (mm) {
-        r = fitBarcode(mm.w * PX_PER_MM, mm.h * PX_PER_MM, it);
-        if (r && r.tooSmall) { tooSmall = true; continue; }
-      } else {
-        r = buildBarcode(Math.max(1, num("bc-width", 2)), Math.max(1, num("bc-height", 100)), it);
-      }
-      if (!r) { bad.push(it); continue; }
-      if (mm) minModule = Math.min(minModule, r.moduleMm);
-      parts.push(r);
+      const r = buildBarcode(Math.max(1, num("bc-width", 2)), Math.max(1, num("bc-height", 100)), it);
+      if (r) parts.push(r); else bad.push(it);
     }
 
     const multi = state.extra.length > 0;
     const badMsg = bad.length
       ? bad.map((b) => (multi ? `${b.n}번 ` : "") + `${b.format} 형식에 맞지 않는 데이터`).join(" · ")
       : "";
-    if (!parts.length) {
-      clearPreview();
-      return showMsg(tooSmall ? "크기가 너무 작아요. mm 값을 늘리거나 여백·글자 크기를 줄이세요." : badMsg);
-    }
+    if (!parts.length) { clearPreview(); return showMsg(badMsg); }
 
     // 위에서 아래로 쌓기 (가로는 가운데 정렬)
     const W = Math.max(...parts.map((p) => p.w));
@@ -270,23 +231,15 @@
       y += p.h;
     });
     const H = y;
-    const mmOut = mm ? { w: mm.w, h: r2(H / PX_PER_MM) } : null;
 
-    const svg = wrapSvg(body, W, H, mmOut);
+    const svg = wrapSvg(body, W, H);
     $("bc-holder").innerHTML = svg;
-    $("bc-holder").firstElementChild.style.width = W + "px";
 
-    const scale = mm ? EXPORT_DPI / 96 : 1;
-    current = { kind: "barcode", svg, pw: Math.round(W * scale), ph: Math.round(H * scale) };
-    $("dim").textContent = mm
-      ? `${mmOut.w} × ${mmOut.h} mm · PNG ${current.pw} × ${current.ph} px (${EXPORT_DPI}dpi)`
-      : `${Math.round(W)} × ${Math.round(H)} px`;
-
+    current = { kind: "barcode", svg, pw: Math.round(W), ph: Math.round(H), viewW: W };
+    $("dim").textContent = `${Math.round(W)} × ${Math.round(H)} px`;
     if (badMsg) showMsg(badMsg);
-    else if (tooSmall) showMsg("일부 바코드는 크기가 너무 작아 표시하지 못했어요");
-    else if (mm && minModule < MIN_MODULE_MM)
-      showMsg(`막대가 너무 가늘어요 (${r2(minModule)}mm). 스캔이 안 될 수 있어요`, true);
     setReady(true);
+    applyFit();
   }
 
   // ---------- 바코드 추가 입력줄 ----------
@@ -340,9 +293,7 @@
     try { qr = qrcode(0, $("qr-ecl").value); qr.addData(text, "Byte"); qr.make(); }
     catch (_) { clearPreview(); return showMsg("내용이 너무 길어요"); }
 
-    const mm = mmSize();
-    const viewPx = mm ? mm.w * PX_PER_MM : Math.max(50, Math.round(num("qr-size", 240)));
-    const size = mm ? Math.round((mm.w / 25.4) * EXPORT_DPI) : viewPx; // 실제 픽셀 수
+    const size = Math.max(50, Math.round(num("qr-size", 240)));
     const margin = Math.round(num("qr-margin", 2));
     const n = qr.getModuleCount();
     const total = n + margin * 2;
@@ -352,7 +303,6 @@
 
     const canvas = $("qr-canvas");
     canvas.width = canvas.height = size;
-    canvas.style.width = viewPx + "px";
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, size, size);
     if (bg) { ctx.fillStyle = bg; ctx.fillRect(0, 0, size, size); }
@@ -366,14 +316,13 @@
         }
     canvas.hidden = false;
 
-    const sizeAttr = mm ? `width="${mm.w}mm" height="${mm.w}mm"` : `width="${size}" height="${size}"`;
-    const svg = `<svg xmlns="${SVG_NS}" ${sizeAttr} viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges">` +
+    const svg = `<svg xmlns="${SVG_NS}" width="${size}" height="${size}" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges">` +
       (bg ? `<rect width="100%" height="100%" fill="${bg}"/>` : "") + `<path d="${d}" fill="${fg}"/></svg>`;
 
-    current = { kind: "qr", svg, pw: size, ph: size };
-    $("dim").textContent = mm ? `${mm.w} × ${mm.w} mm · PNG ${size} × ${size} px (${EXPORT_DPI}dpi)` : `${size} × ${size} px`;
-    if (mm && (mm.w / total) < 0.25) showMsg("QR 칸이 너무 작아요. 크기를 키우는 걸 권장해요", true);
+    current = { kind: "qr", svg, pw: size, ph: size, viewW: size };
+    $("dim").textContent = `${size} × ${size} px`;
     setReady(true);
+    applyFit();
   }
 
   // ---------- 저장 / 복사 / 인쇄 ----------
@@ -442,7 +391,7 @@
 
   $("bc-format").addEventListener("change", render);
   $("qr-type").addEventListener("change", () => { renderQrFields(); render(); });
-  ["bc-value", "fg", "bg", "bg-none", "size-w", "size-h", ...SELECTS].forEach((id) => $(id).addEventListener("input", render));
+  ["bc-value", "fg", "bg", "bg-none", ...SELECTS].forEach((id) => $(id).addEventListener("input", render));
 
   const showRange = (id) => ($(id + "-v").textContent = $(id).value);
   RANGES.forEach((id) =>
@@ -456,7 +405,6 @@
 
   document.querySelectorAll("#size-seg button").forEach((btn) =>
     btn.addEventListener("click", () => {
-      $("size-w").value = ""; $("size-h").value = ""; // 크기 버튼을 누르면 mm 입력 해제
       document.querySelectorAll("#size-seg button").forEach((b) => b.classList.toggle("active", b === btn));
       Object.entries(PRESETS[btn.dataset.size]).forEach(([id, v]) => { $(id).value = v; showRange(id); });
       render();
@@ -473,9 +421,8 @@
     inputs[inputs.length - 1].focus();
   });
 
-  // 화면에 맞추기: 큰 바코드를 상자 폭에 맞춰 줄여서 보기 (저장 크기는 그대로)
-  const applyFit = () => $("preview").classList.toggle("fit", $("fit").checked);
   $("fit").addEventListener("change", () => { applyFit(); save(); });
+  window.addEventListener("resize", applyFit);
 
   $("reset-color").addEventListener("click", () => {
     $("fg").value = "#000000"; $("bg").value = "#ffffff"; $("bg-none").checked = false; render();
@@ -499,8 +446,8 @@
       .slice(0, MAX_BARCODES - 1);
   renderExtraRows();
   $("bg-none").checked = !!saved.bgNone;
-  $("fit").checked = !!saved.fit;
-  applyFit();
+  // 화면에 맞추기: 저장한 값이 없으면 휴대폰처럼 좁은 화면에서는 기본으로 켬
+  $("fit").checked = typeof saved.fit === "boolean" ? saved.fit : window.innerWidth < 700;
   setTextPos(["top", "bottom", "left", "right", "none"].includes(saved.textPos) ? saved.textPos : "bottom");
 
   RANGES.forEach(showRange);

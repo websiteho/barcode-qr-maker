@@ -69,7 +69,7 @@
           <div id="bc-holder"></div>
           <canvas id="qr-canvas" hidden></canvas>
         </div>
-        <button type="button" class="add-bc" id="add-bc" title="바코드 추가" aria-label="바코드 추가">+</button>
+        <button type="button" class="add-bc" id="add-bc" title="바코드 추가">바코드 추가</button>
       </div>
       <div class="meta">
         <span class="error" id="error"></span>
@@ -97,26 +97,20 @@
             <button data-size="l">크게</button>
           </div>
         </div>
-        <div class="field">
-          <span>직접 입력</span>
-          <div class="mm" id="mm-box">
-            <input type="number" id="size-w" min="1" max="1000" step="0.5" placeholder="가로" />
-            <i>×</i>
-            <input type="number" id="size-h" min="1" max="1000" step="0.5" placeholder="세로" />
-            <em>mm</em>
-          </div>
-        </div>
       </div>
 
       <div class="row">
         <div class="field bc-only">
           <span>글자 위치</span>
-          <div class="pad" id="text-pad">
-            <button data-pos="top" title="위" style="grid-area:t">▲</button>
-            <button data-pos="left" title="왼쪽" style="grid-area:l">◀</button>
-            <button data-pos="none" title="글자 숨김" style="grid-area:c">✕</button>
-            <button data-pos="right" title="오른쪽" style="grid-area:r">▶</button>
-            <button data-pos="bottom" title="아래" style="grid-area:b">▼</button>
+          <div class="pos-pad" id="text-pad">
+            <button type="button" data-pos="top" class="p-top">위</button>
+            <button type="button" data-pos="left" class="p-left">좌측</button>
+            <span class="p-mid" aria-hidden="true">
+              <svg viewBox="0 0 48 28" preserveAspectRatio="none"><g fill="currentColor"><rect x="2" y="2" width="3" height="24"/><rect x="7" y="2" width="1.5" height="24"/><rect x="11" y="2" width="4" height="24"/><rect x="17" y="2" width="1.5" height="24"/><rect x="21" y="2" width="3" height="24"/><rect x="26" y="2" width="1.5" height="24"/><rect x="30" y="2" width="4" height="24"/><rect x="36" y="2" width="1.5" height="24"/><rect x="40" y="2" width="2" height="24"/><rect x="44" y="2" width="2" height="24"/></g></svg>
+            </span>
+            <button type="button" data-pos="right" class="p-right">우측</button>
+            <button type="button" data-pos="bottom" class="p-bottom">아래</button>
+            <button type="button" data-pos="none" class="p-none">글자 없음</button>
           </div>
         </div>
         <label class="field color"><span>코드 색</span><input type="color" id="fg" value="#000000" /></label>

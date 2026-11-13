@@ -23,6 +23,9 @@ button, input, select { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
 
 .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 40px; display: grid; gap: 12px; }
+/* 그리드 칸이 내용(긴 바코드) 폭만큼 늘어나지 않게 → 미리보기 안에서 스크롤/맞추기 */
+.wrap { grid-template-columns: minmax(0, 1fr); }
+.wrap > *, .card, .preview-wrap, .preview { min-width: 0; }
 .title { margin: 0 0 4px; font-size: 22px; text-align: center; letter-spacing: -0.3px; }
 
 /* 탭 */
@@ -38,7 +41,7 @@ button, input, select { font: inherit; color: inherit; }
 
 /* 입력 + 종류 한 줄 */
 .line { display: flex; gap: 8px; align-items: flex-start; }
-.line > input, .qr-fields { flex: 1; min-width: 0; }
+.line > input, .qr-fields { flex: 1 1 0; min-width: 0; width: 0; }
 .qr-fields { display: flex; flex-wrap: wrap; gap: 8px; }
 .qr-fields input { flex: 1 1 140px; min-width: 0; }
 .line input, .line select {
@@ -52,25 +55,22 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 .preview {
   min-height: 200px; display: flex; overflow: auto;
   background: repeating-conic-gradient(#f3f4f8 0% 25%, #fff 0% 50%) 50% / 16px 16px;
-  border-radius: 10px; padding: 16px;
+  border-radius: 10px; padding: 16px 16px 48px;
 }
 /* margin:auto 로 가운데 정렬 → 바코드가 상자보다 커져도 왼쪽이 잘리지 않고 스크롤됨 */
 #bc-holder, .preview canvas { margin: auto; flex: none; }
 #bc-holder:empty { display: none; }
 #bc-holder svg, .preview canvas { display: block; height: auto; }
-.preview.fit #bc-holder { max-width: 100%; flex: 0 1 auto; }
-.preview.fit #bc-holder svg, .preview.fit canvas { max-width: 100%; }
 
 /* 여러 바코드 */
 .preview-wrap { position: relative; }
 .add-bc {
-  position: absolute; right: 10px; bottom: 10px; width: 30px; height: 30px; padding: 0;
-  border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--brand);
-  font-size: 20px; line-height: 1; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, .1);
-  display: grid; place-items: center;
+  position: absolute; right: 10px; bottom: 10px; height: 30px; padding: 0 14px;
+  border-radius: 999px; border: 1px solid var(--brand); background: #fff; color: var(--brand);
+  font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, .1);
 }
 .add-bc:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
-#bc-extra { display: grid; gap: 8px; margin-top: 8px; }
+#bc-extra { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 8px; }
 #bc-extra:empty { display: none; }
 .line .rm {
   width: 44px; height: 44px; flex: none; border: 1px solid var(--line); border-radius: 8px;
@@ -79,7 +79,7 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 .line .rm:hover { color: var(--danger); border-color: var(--danger); }
 .line.multi::after { content: ""; width: 44px; flex: none; }
 
-.meta { display: flex; justify-content: space-between; gap: 8px; min-height: 20px; margin-top: 8px; font-size: 13px; }
+.meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; min-height: 20px; margin-top: 8px; font-size: 13px; }
 .error { color: var(--danger); }
 .dim { color: var(--muted); margin-left: auto; }
 .fit-toggle { display: flex; align-items: center; gap: 4px; color: var(--muted); cursor: pointer; white-space: nowrap; }
@@ -109,30 +109,32 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 .field.color input {
   width: 64px; height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: #fff; cursor: pointer;
 }
-.size-row { align-items: flex-start; margin-bottom: 4px; }
-.mm { display: flex; align-items: center; gap: 6px; }
-.mm input {
-  width: 76px; height: 40px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; text-align: right;
+/* 글자 위치: 가운데 바코드 그림을 기준으로 위·아래·좌측·우측 */
+.pos-pad {
+  display: grid; gap: 4px;
+  grid-template-columns: 46px 84px 46px;
+  grid-template-rows: 28px 50px 28px 28px;
+  grid-template-areas: ". t ." "l m r" ". b ." "n n n";
 }
-.mm i { font-style: normal; color: var(--muted); }
-.mm em { font-style: normal; color: var(--muted); font-size: 14px; }
-.mm.on input { border-color: var(--brand); }
-.seg.off button.active { background: #fff; color: inherit; }
-
-.pad {
-  display: grid; grid-template-areas: ". t ." "l c r" ". b ."; grid-template-columns: repeat(3, 32px);
-  grid-template-rows: repeat(3, 26px); gap: 3px;
+.pos-pad button {
+  border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer;
+  font-size: 12.5px; color: var(--muted); padding: 0;
 }
-.pad button {
-  border: 1px solid var(--line); background: #fff; border-radius: 5px; cursor: pointer;
-  font-size: 11px; color: var(--muted); padding: 0;
+.pos-pad button:hover { border-color: var(--brand); color: var(--brand); }
+.pos-pad button.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.pos-pad .p-top { grid-area: t; }
+.pos-pad .p-left { grid-area: l; }
+.pos-pad .p-right { grid-area: r; }
+.pos-pad .p-bottom { grid-area: b; }
+.pos-pad .p-none { grid-area: n; }
+.pos-pad .p-mid {
+  grid-area: m; display: grid; place-items: center; padding: 6px 8px;
+  border: 1px dashed var(--line); border-radius: 6px; color: var(--ink); background: #fff;
 }
-.pad button.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.pos-pad .p-mid svg { width: 100%; height: 100%; display: block; }
 
 .check { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; padding-bottom: 10px; }
 .check input { width: 16px; height: 16px; accent-color: var(--brand); }
-.field input[type="range"]:disabled { opacity: .35; }
-.field.locked > span::after { content: " (mm 입력 중)"; font-size: 12px; }
 .warn { color: #c77700; }
 .field.color input:disabled { opacity: .3; cursor: not-allowed; }
 
@@ -169,10 +171,19 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-@media (max-width: 520px) {
+@media (max-width: 600px) {
+  .wrap { padding: 16px 12px 32px; gap: 10px; }
+  .title { font-size: 19px; }
+  .card { padding: 12px; }
   .actions { grid-template-columns: 1fr 1fr; }
-  .line select { width: 112px; }
+  .line select { width: 108px; padding: 0 8px; }
+  .line .rm { width: 40px; }
+  .line.multi::after { width: 40px; }
   .grid2 { grid-template-columns: 1fr; }
+  .row { gap: 14px; }
+  .preview { min-height: 150px; padding: 12px 12px 48px; }
+  .field select, .line input, .line select { font-size: 16px; } /* iOS 확대 방지 */
+  .about { font-size: 12.5px; }
 }
 
 @media print {
