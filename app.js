@@ -42,7 +42,7 @@
   const RANGES = ["bc-width", "bc-height", "bc-margin", "bc-font-size", "bc-text-margin", "qr-size", "qr-margin"];
   const SELECTS = ["bc-text-align", "bc-font", "bc-font-opt", "qr-ecl"];
 
-  const state = { mode: "barcode", qrType: "text", qrValues: {}, textPos: "bottom" };
+  const state = { mode: "barcode", qrType: "text", qrValues: {}, textPos: "bottom", extra: [] };
   let current = { kind: null };
 
   // ---------- 저장/복원 ----------
@@ -50,7 +50,7 @@
   const SAVE_IDS = ["bc-value", "bc-format", "qr-type", "fg", "bg", "size-w", "size-h", ...RANGES, ...SELECTS];
   function save() {
     try {
-      const d = { mode: state.mode, qrValues: state.qrValues, textPos: state.textPos, bgNone: $("bg-none").checked, fit: $("fit").checked };
+      const d = { mode: state.mode, qrValues: state.qrValues, textPos: state.textPos, bgNone: $("bg-none").checked, fit: $("fit").checked, extra: state.extra };
       SAVE_IDS.forEach((id) => (d[id] = $(id).value));
       localStorage.setItem(STORE, JSON.stringify(d));
     } catch (_) {}
@@ -79,6 +79,8 @@
     const isQr = mode === "qr";
     $("barcode-input").hidden = isQr;
     $("qr-input").hidden = !isQr;
+    $("bc-extra").hidden = isQr;
+    syncAddButton();
     document.querySelector(".grid2.bc").hidden = isQr;
     document.querySelector(".grid2.qr").hidden = !isQr;
     document.querySelectorAll(".bc-only").forEach((e) => (e.hidden = isQr));
@@ -140,14 +142,23 @@
   }
 
   // ---------- 바코드 ----------
-  function barcodeData() {
-    let v = $("bc-value").value;
-    if (/^CODE128/.test($("bc-format").value)) v = v.replace(/\\F/g, String.fromCharCode(207)); // \F → FNC1
+  const MAX_BARCODES = 3;
+  const STACK_GAP = 16; // 여러 바코드 사이 간격 (CSS px)
+
+  // 화면에 그릴 바코드 목록: 첫 줄 + 추가한 줄들
+  function barcodeItems() {
+    return [{ value: $("bc-value").value, format: $("bc-format").value }, ...state.extra]
+      .map((it, i) => ({ ...it, n: i + 1 }));
+  }
+
+  function barcodeData(item) {
+    let v = item.value;
+    if (/^CODE128/.test(item.format)) v = v.replace(/\\F/g, String.fromCharCode(207)); // \F → FNC1
     return v;
   }
 
   // 막대 두께/높이를 지정해서 바코드 하나를 그림 → { body, w, h } (단위: CSS px)
-  function buildBarcode(barWidth, barHeight) {
+  function buildBarcode(barWidth, barHeight, item) {
     const pos = state.textPos;
     const native = pos === "top" || pos === "bottom";
     const fg = $("fg").value;
@@ -157,8 +168,8 @@
     const tmp = document.createElementNS(SVG_NS, "svg");
     let valid = true;
     try {
-      JsBarcode(tmp, barcodeData(), {
-        format: $("bc-format").value,
+      JsBarcode(tmp, barcodeData(item), {
+        format: item.format,
         width: barWidth,
         height: barHeight,
         margin,
@@ -183,7 +194,7 @@
     }
 
     // 왼쪽 / 오른쪽: 바코드 옆 세로 가운데에 글자
-    const label = $("bc-value").value.replace(/\\F/g, "");
+    const label = item.value.replace(/\\F/g, "");
     const font = $("bc-font").value, fopt = $("bc-font-opt").value;
     const ctx = document.createElement("canvas").getContext("2d");
     ctx.font = `${fopt} ${fontSize}px ${font}`.trim();
@@ -200,14 +211,14 @@
   }
 
   // 원하는 전체 크기(px)에 맞도록 막대 두께·높이를 계산 (크기는 두께·높이에 비례하므로 두 번 재서 역산)
-  function fitBarcode(targetW, targetH) {
-    const a = buildBarcode(1, 10), b = buildBarcode(2, 10), c = buildBarcode(1, 20);
+  function fitBarcode(targetW, targetH, item) {
+    const a = buildBarcode(1, 10, item), b = buildBarcode(2, 10, item), c = buildBarcode(1, 20, item);
     if (!a || !b || !c) return null;
     const kw = b.w - a.w, kh = (c.h - a.h) / 10;
     const bw = (targetW - (a.w - kw)) / kw;
     const bh = (targetH - (a.h - 10 * kh)) / kh;
     if (!(bw > 0.05) || !(bh > 1)) return { tooSmall: true };
-    const r = buildBarcode(bw, bh);
+    const r = buildBarcode(bw, bh, item);
     r.moduleMm = bw / PX_PER_MM;
     return r;
   }
@@ -221,31 +232,99 @@
 
   function renderBarcode() {
     $("qr-canvas").hidden = true;
-    if (!$("bc-value").value) return clearPreview();
+    const list = barcodeItems().filter((it) => it.value);
+    if (!list.length) return clearPreview();
     if (!window.JsBarcode) { clearPreview(); return showMsg("라이브러리를 불러오지 못했어요. 인터넷 연결을 확인하세요."); }
 
     const mm = mmSize();
-    let r;
-    if (mm) {
-      r = fitBarcode(mm.w * PX_PER_MM, mm.h * PX_PER_MM);
-      if (r && r.tooSmall) { clearPreview(); return showMsg("크기가 너무 작아요. mm 값을 늘리거나 여백·글자 크기를 줄이세요."); }
-    } else {
-      r = buildBarcode(Math.max(1, num("bc-width", 2)), Math.max(1, num("bc-height", 100)));
+    const parts = [], bad = [];
+    let tooSmall = false, minModule = Infinity;
+    for (const it of list) {
+      let r;
+      if (mm) {
+        r = fitBarcode(mm.w * PX_PER_MM, mm.h * PX_PER_MM, it);
+        if (r && r.tooSmall) { tooSmall = true; continue; }
+      } else {
+        r = buildBarcode(Math.max(1, num("bc-width", 2)), Math.max(1, num("bc-height", 100)), it);
+      }
+      if (!r) { bad.push(it); continue; }
+      if (mm) minModule = Math.min(minModule, r.moduleMm);
+      parts.push(r);
     }
-    if (!r) { clearPreview(); return showMsg(`${$("bc-format").value} 형식에 맞지 않는 데이터`); }
 
-    const svg = wrapSvg(r.body, r.w, r.h, mm);
+    const multi = state.extra.length > 0;
+    const badMsg = bad.length
+      ? bad.map((b) => (multi ? `${b.n}번 ` : "") + `${b.format} 형식에 맞지 않는 데이터`).join(" · ")
+      : "";
+    if (!parts.length) {
+      clearPreview();
+      return showMsg(tooSmall ? "크기가 너무 작아요. mm 값을 늘리거나 여백·글자 크기를 줄이세요." : badMsg);
+    }
+
+    // 위에서 아래로 쌓기 (가로는 가운데 정렬)
+    const W = Math.max(...parts.map((p) => p.w));
+    let y = 0, body = "";
+    parts.forEach((p, i) => {
+      if (i) y += STACK_GAP;
+      body += `<g transform="translate(${r2((W - p.w) / 2)},${r2(y)})">${p.body}</g>`;
+      y += p.h;
+    });
+    const H = y;
+    const mmOut = mm ? { w: mm.w, h: r2(H / PX_PER_MM) } : null;
+
+    const svg = wrapSvg(body, W, H, mmOut);
     $("bc-holder").innerHTML = svg;
-    $("bc-holder").firstElementChild.style.width = r.w + "px";
+    $("bc-holder").firstElementChild.style.width = W + "px";
 
     const scale = mm ? EXPORT_DPI / 96 : 1;
-    current = { kind: "barcode", svg, pw: Math.round(r.w * scale), ph: Math.round(r.h * scale) };
+    current = { kind: "barcode", svg, pw: Math.round(W * scale), ph: Math.round(H * scale) };
     $("dim").textContent = mm
-      ? `${mm.w} × ${mm.h} mm · PNG ${current.pw} × ${current.ph} px (${EXPORT_DPI}dpi)`
-      : `${Math.round(r.w)} × ${Math.round(r.h)} px`;
-    if (mm && r.moduleMm < MIN_MODULE_MM)
-      showMsg(`막대가 너무 가늘어요 (${r2(r.moduleMm)}mm). 스캔이 안 될 수 있어요`, true);
+      ? `${mmOut.w} × ${mmOut.h} mm · PNG ${current.pw} × ${current.ph} px (${EXPORT_DPI}dpi)`
+      : `${Math.round(W)} × ${Math.round(H)} px`;
+
+    if (badMsg) showMsg(badMsg);
+    else if (tooSmall) showMsg("일부 바코드는 크기가 너무 작아 표시하지 못했어요");
+    else if (mm && minModule < MIN_MODULE_MM)
+      showMsg(`막대가 너무 가늘어요 (${r2(minModule)}mm). 스캔이 안 될 수 있어요`, true);
     setReady(true);
+  }
+
+  // ---------- 바코드 추가 입력줄 ----------
+  function renderExtraRows() {
+    const box = $("bc-extra");
+    box.innerHTML = "";
+    state.extra.forEach((it, i) => {
+      const row = document.createElement("div");
+      row.className = "line extra-line";
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.placeholder = `바코드 데이터 입력 (${i + 2})`;
+      inp.autocomplete = "off";
+      inp.spellcheck = false;
+      inp.value = it.value;
+      inp.addEventListener("input", () => { it.value = inp.value; render(); });
+      const sel = document.createElement("select");
+      sel.setAttribute("aria-label", `바코드 종류 (${i + 2})`);
+      FORMATS.forEach((f) => { const o = document.createElement("option"); o.value = o.textContent = f; sel.appendChild(o); });
+      sel.value = it.format;
+      sel.addEventListener("change", () => { it.format = sel.value; render(); });
+      const rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "rm";
+      rm.textContent = "✕";
+      rm.title = "이 바코드 삭제";
+      rm.addEventListener("click", () => { state.extra.splice(i, 1); renderExtraRows(); render(); });
+      row.append(inp, sel, rm);
+      box.appendChild(row);
+    });
+    $("barcode-input").classList.toggle("multi", state.extra.length > 0);
+    syncAddButton();
+  }
+
+  function syncAddButton() {
+    const btn = $("add-bc");
+    btn.hidden = state.mode !== "barcode" || state.extra.length >= MAX_BARCODES - 1;
+    btn.title = `바코드 추가 (${state.extra.length + 1}/${MAX_BARCODES})`;
   }
 
   // ---------- QR ----------
@@ -384,6 +463,16 @@
     })
   );
 
+  // + 버튼: 바코드 입력줄 추가 (최대 3개)
+  $("add-bc").addEventListener("click", () => {
+    if (state.extra.length >= MAX_BARCODES - 1) return;
+    state.extra.push({ value: "", format: $("bc-format").value });
+    renderExtraRows();
+    render();
+    const inputs = $("bc-extra").querySelectorAll("input");
+    inputs[inputs.length - 1].focus();
+  });
+
   // 화면에 맞추기: 큰 바코드를 상자 폭에 맞춰 줄여서 보기 (저장 크기는 그대로)
   const applyFit = () => $("preview").classList.toggle("fit", $("fit").checked);
   $("fit").addEventListener("change", () => { applyFit(); save(); });
@@ -404,6 +493,11 @@
     $(id).value = saved[id];
   });
   if (saved.qrValues) state.qrValues = saved.qrValues;
+  if (Array.isArray(saved.extra))
+    state.extra = saved.extra
+      .filter((it) => it && typeof it.value === "string" && FORMATS.includes(it.format))
+      .slice(0, MAX_BARCODES - 1);
+  renderExtraRows();
   $("bg-none").checked = !!saved.bgNone;
   $("fit").checked = !!saved.fit;
   applyFit();
@@ -420,7 +514,7 @@
   if (pre.presetPos) setTextPos(pre.presetPos);
   if (pre.presetBgnone === "1") $("bg-none").checked = true;
   // 이전에 입력한 값이 이 페이지의 바코드 종류에 맞지 않으면 비워 둠
-  if (pre.presetFormat && window.JsBarcode && $("bc-value").value && !buildBarcode(2, 100)) $("bc-value").value = "";
+  if (pre.presetFormat && window.JsBarcode && $("bc-value").value && !buildBarcode(2, 100, barcodeItems()[0])) $("bc-value").value = "";
 
   renderQrFields();
   setMode(pre.presetMode || (saved.mode === "qr" ? "qr" : "barcode"));

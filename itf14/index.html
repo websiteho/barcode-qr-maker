@@ -49,6 +49,7 @@
         <input id="bc-value" type="text" placeholder="바코드 데이터 입력" autocomplete="off" spellcheck="false" />
         <select id="bc-format" aria-label="바코드 종류"></select>
       </div>
+      <div id="bc-extra"></div>
       <div class="line" id="qr-input" hidden>
         <div class="qr-fields" id="qr-fields"></div>
         <select id="qr-type" aria-label="QR 종류">
@@ -63,9 +64,12 @@
 
     <!-- ② 바코드 / QR 미리보기 + 저장 -->
     <section class="card">
-      <div class="preview" id="preview">
-        <div id="bc-holder"></div>
-        <canvas id="qr-canvas" hidden></canvas>
+      <div class="preview-wrap">
+        <div class="preview" id="preview">
+          <div id="bc-holder"></div>
+          <canvas id="qr-canvas" hidden></canvas>
+        </div>
+        <button type="button" class="add-bc" id="add-bc" title="바코드 추가" aria-label="바코드 추가">+</button>
       </div>
       <div class="meta">
         <span class="error" id="error"></span>

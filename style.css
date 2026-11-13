@@ -61,6 +61,24 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 .preview.fit #bc-holder { max-width: 100%; flex: 0 1 auto; }
 .preview.fit #bc-holder svg, .preview.fit canvas { max-width: 100%; }
 
+/* 여러 바코드 */
+.preview-wrap { position: relative; }
+.add-bc {
+  position: absolute; right: 10px; bottom: 10px; width: 30px; height: 30px; padding: 0;
+  border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--brand);
+  font-size: 20px; line-height: 1; cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, .1);
+  display: grid; place-items: center;
+}
+.add-bc:hover { background: var(--brand); border-color: var(--brand); color: #fff; }
+#bc-extra { display: grid; gap: 8px; margin-top: 8px; }
+#bc-extra:empty { display: none; }
+.line .rm {
+  width: 44px; height: 44px; flex: none; border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; color: var(--muted); cursor: pointer;
+}
+.line .rm:hover { color: var(--danger); border-color: var(--danger); }
+.line.multi::after { content: ""; width: 44px; flex: none; }
+
 .meta { display: flex; justify-content: space-between; gap: 8px; min-height: 20px; margin-top: 8px; font-size: 13px; }
 .error { color: var(--danger); }
 .dim { color: var(--muted); margin-left: auto; }
