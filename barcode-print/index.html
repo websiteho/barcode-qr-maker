@@ -74,7 +74,6 @@
       <div class="meta">
         <span class="error" id="error"></span>
         <span class="dim" id="dim"></span>
-        <label class="fit-toggle"><input type="checkbox" id="fit" /> 화면에 맞추기</label>
       </div>
       <div class="actions">
         <button class="btn primary" id="dl-png">PNG 저장</button>
@@ -99,6 +98,16 @@
         </div>
       </div>
 
+      <div class="row color-row">
+        <label class="field color"><span>코드 색</span><input type="color" id="fg" value="#000000" /></label>
+        <div class="field color">
+          <span>배경 색</span>
+          <input type="color" id="bg" value="#ffffff" />
+        </div>
+        <label class="check"><input type="checkbox" id="bg-none" /> 배경 없음</label>
+        <button class="link" id="reset-color" type="button">기본색으로</button>
+      </div>
+
       <div class="row">
         <div class="field bc-only">
           <span>글자 위치</span>
@@ -113,13 +122,6 @@
             <button type="button" data-pos="none" class="p-none">글자 없음</button>
           </div>
         </div>
-        <label class="field color"><span>코드 색</span><input type="color" id="fg" value="#000000" /></label>
-        <div class="field color">
-          <span>배경 색</span>
-          <input type="color" id="bg" value="#ffffff" />
-        </div>
-        <label class="check"><input type="checkbox" id="bg-none" /> 배경 없음</label>
-        <button class="link" id="reset-color" type="button">기본색으로</button>
       </div>
 
       <details class="adv" open>

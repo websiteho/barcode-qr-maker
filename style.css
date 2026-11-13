@@ -53,7 +53,7 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 
 /* 미리보기 */
 .preview {
-  min-height: 200px; display: flex; overflow: auto;
+  min-height: 200px; display: flex; overflow: hidden;
   background: repeating-conic-gradient(#f3f4f8 0% 25%, #fff 0% 50%) 50% / 16px 16px;
   border-radius: 10px; padding: 16px 16px 48px;
 }
@@ -82,8 +82,6 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
 .meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; min-height: 20px; margin-top: 8px; font-size: 13px; }
 .error { color: var(--danger); }
 .dim { color: var(--muted); margin-left: auto; }
-.fit-toggle { display: flex; align-items: center; gap: 4px; color: var(--muted); cursor: pointer; white-space: nowrap; }
-.fit-toggle input { accent-color: var(--brand); margin: 0; }
 
 .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
 .btn { height: 42px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-weight: 600; }
@@ -132,6 +130,8 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
   border: 1px dashed var(--line); border-radius: 6px; color: var(--ink); background: #fff;
 }
 .pos-pad .p-mid svg { width: 100%; height: 100%; display: block; }
+
+.color-row { margin-bottom: 14px; }
 
 .check { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; padding-bottom: 10px; }
 .check input { width: 16px; height: 16px; accent-color: var(--brand); }
@@ -186,8 +186,17 @@ input:focus, select:focus { outline: 2px solid var(--brand); outline-offset: -1p
   .about { font-size: 12.5px; }
 }
 
+#print-area { display: none; }
+
 @media print {
-  body * { visibility: hidden; }
-  #preview, #preview * { visibility: visible; }
-  #preview { position: absolute; inset: 0; background: none; }
+  @page { margin: 10mm; }
+  body { background: #fff; }
+  body > *:not(#print-area) { display: none !important; }
+  #print-area { display: block !important; }
+  /* 한 페이지 안에 들어오도록: 실제 크기로 찍되, 넘치면 비율 유지하며 줄임 */
+  #print-area img {
+    display: block; margin: 0 auto;
+    width: auto; height: auto; max-width: 100%; max-height: 95vh;
+    page-break-inside: avoid; break-inside: avoid;
+  }
 }

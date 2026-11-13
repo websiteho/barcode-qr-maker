@@ -47,7 +47,7 @@
   const SAVE_IDS = ["bc-value", "bc-format", "qr-type", "fg", "bg", ...RANGES, ...SELECTS];
   function save() {
     try {
-      const d = { mode: state.mode, qrValues: state.qrValues, textPos: state.textPos, bgNone: $("bg-none").checked, fit: $("fit").checked, extra: state.extra };
+      const d = { mode: state.mode, qrValues: state.qrValues, textPos: state.textPos, bgNone: $("bg-none").checked, extra: state.extra };
       SAVE_IDS.forEach((id) => (d[id] = $(id).value));
       localStorage.setItem(STORE, JSON.stringify(d));
     } catch (_) {}
@@ -109,7 +109,7 @@
     current = { kind: null };
   }
 
-  // 화면에 맞추기: 미리보기 상자보다 크면 상자 폭에 맞춰 줄여서 보여줌 (저장 크기는 그대로)
+  // 미리보기 상자보다 크면 상자 폭에 맞춰 줄여서 보여줌 (스크롤 없음, 저장·인쇄 크기는 그대로)
   function applyFit() {
     if (!current.kind) return;
     const el = current.kind === "qr" ? $("qr-canvas") : $("bc-holder").firstElementChild;
@@ -117,7 +117,7 @@
     const box = $("preview");
     const cs = getComputedStyle(box);
     const avail = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    const w = $("fit").checked ? Math.min(current.viewW, avail) : current.viewW;
+    const w = Math.min(current.viewW, avail);
     el.style.width = Math.max(1, Math.floor(w)) + "px";
   }
 
@@ -383,7 +383,23 @@
       toast("이미지 복사됨");
     } catch (_) { toast("이 브라우저에서는 복사가 안 돼요"); }
   });
-  $("print").addEventListener("click", () => window.print());
+  // 인쇄: 바코드 이미지 한 장만 담은 인쇄 전용 영역을 만들어 한 페이지에 맞춰 출력
+  $("print").addEventListener("click", () => {
+    if (!current.kind) return;
+    let area = $("print-area");
+    if (!area) {
+      area = document.createElement("div");
+      area.id = "print-area";
+      document.body.appendChild(area);
+    }
+    area.innerHTML = "";
+    const img = new Image();
+    img.alt = "";
+    img.onload = () => window.print();
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(current.svg);
+    area.appendChild(img);
+  });
+  window.addEventListener("afterprint", () => { const a = $("print-area"); if (a) a.innerHTML = ""; });
 
   // ---------- 이벤트 ----------
   document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => setMode(t.dataset.mode)));
@@ -421,7 +437,6 @@
     inputs[inputs.length - 1].focus();
   });
 
-  $("fit").addEventListener("change", () => { applyFit(); save(); });
   window.addEventListener("resize", applyFit);
 
   $("reset-color").addEventListener("click", () => {
@@ -446,8 +461,6 @@
       .slice(0, MAX_BARCODES - 1);
   renderExtraRows();
   $("bg-none").checked = !!saved.bgNone;
-  // 화면에 맞추기: 저장한 값이 없으면 휴대폰처럼 좁은 화면에서는 기본으로 켬
-  $("fit").checked = typeof saved.fit === "boolean" ? saved.fit : window.innerWidth < 700;
   setTextPos(["top", "bottom", "left", "right", "none"].includes(saved.textPos) ? saved.textPos : "bottom");
 
   RANGES.forEach(showRange);
