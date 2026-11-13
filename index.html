@@ -3,13 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>바코드 · QR 코드 생성기</title>
-  <meta name="description" content="설치 없이 브라우저에서 바로 만드는 무료 바코드 · QR 코드 생성기" />
+  <title>바코드 생성기 · QR코드 생성기 - 무료 온라인 바코드 만들기</title>
+  <meta name="description" content="설치 없이 무료로 바코드와 QR코드를 바로 만드세요. CODE128, EAN-13, CODE39, ITF-14 등 지원. mm 크기 지정, 투명 배경, PNG·SVG 저장, 와이파이·전화·URL QR코드까지." />
+  <meta name="keywords" content="바코드 생성기, 바코드 만들기, QR코드 생성기, QR코드 만들기, 무료 바코드, EAN13, CODE128, 바코드 이미지, 온라인 바코드" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:title" content="바코드 생성기 · QR코드 생성기 - 무료 온라인" />
+  <meta property="og:description" content="설치 없이 바코드·QR코드를 바로 만들고 PNG·SVG로 저장하세요." />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "바코드 생성기 · QR코드 생성기",
+    "description": "설치 없이 무료로 바코드와 QR코드를 만드는 온라인 도구",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "ko",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" }
+  }
+  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="wrap">
-    <h1 class="title">바코드 · QR 생성기</h1>
+    <h1 class="title">바코드 생성기 · QR코드 생성기</h1>
 
     <nav class="tabs" role="tablist">
       <button class="tab active" data-mode="barcode" role="tab">바코드</button>
@@ -142,6 +161,30 @@
               <option value="H">최고 (30%)</option>
             </select></label>
         </div>
+      </details>
+    </section>
+    <!-- 검색엔진용 안내 (도구 아래에 작게 표시) -->
+    <section class="about">
+      <h2>무료 온라인 바코드 생성기</h2>
+      <p>프로그램 설치나 회원가입 없이 바코드와 QR코드를 바로 만들 수 있는 무료 도구입니다.
+        입력한 데이터는 서버로 전송되지 않고 내 브라우저 안에서만 처리됩니다.</p>
+      <h3>지원하는 바코드 종류</h3>
+      <p>CODE128(A·B·C), EAN-13, EAN-8, UPC-A, CODE39, ITF-14, ITF, Codabar, MSI, Pharmacode</p>
+      <h3>주요 기능</h3>
+      <ul>
+        <li>바코드 크기를 mm 단위로 지정 (인쇄용 300dpi PNG)</li>
+        <li>바코드 숫자 위치를 위·아래·왼쪽·오른쪽으로 선택</li>
+        <li>투명 배경, 색상 변경, PNG · SVG 저장, 인쇄</li>
+        <li>URL · 와이파이 · 전화 · 문자 · 이메일 QR코드 만들기 (한글 지원)</li>
+      </ul>
+      <details>
+        <summary>상품 바코드(EAN-13)는 어떻게 만드나요?</summary>
+        <p>종류에서 EAN13을 고르고 숫자 12자리 또는 13자리를 입력하세요. 12자리만 넣으면 마지막 체크 숫자는 자동으로 계산됩니다.
+          실제 판매용 상품 바코드 번호는 대한상공회의소(GS1 Korea)에서 발급받아야 합니다.</p>
+      </details>
+      <details>
+        <summary>와이파이 QR코드는 어떻게 만드나요?</summary>
+        <p>QR 탭에서 종류를 WIFI로 바꾸고 와이파이 이름과 비밀번호를 입력하면, 휴대폰 카메라로 찍기만 해도 바로 연결되는 QR코드가 만들어집니다.</p>
       </details>
     </section>
   </main>
