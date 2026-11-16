@@ -363,7 +363,13 @@ def build():
     rootdir.mkdir(exist_ok=True)
     today = date.today().isoformat()
     urls = "\n".join(f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>" for u in out)
+    root_urls = f"  <url><loc>{HOST}/</loc><lastmod>{today}</lastmod></url>\n" + urls
     (rootdir / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + root_urls + "\n</urlset>\n",
+        encoding="utf-8")
+    # barcode-qr-maker 속성용 사이트맵 (홈 주소 제외)
+    (ROOT / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + "\n</urlset>\n",
         encoding="utf-8")
